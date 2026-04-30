@@ -117,7 +117,7 @@ const alertSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["SOS", "FIRE", "EARTHQUAKE", "TAMPER", "DEVICE_OFFLINE"],
+      enum: ["SOS", "FIRE", "EARTHQUAKE", "TEMPERATURE_WARNING", "DEVICE_OFFLINE"],
       required: true
     },
     severity: {
@@ -142,14 +142,68 @@ const alertSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+const userSchema = new mongoose.Schema(
+  {
+    // Základní info
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true
+    },
+    password: {
+      type: String,
+      required: true
+    },
+    firstName: {
+      type: String,
+      required: true
+    },
+    lastName: {
+      type: String,
+      required: true
+    },
+
+    // Role & Oprávnění
+    role: {
+      type: String,
+      enum: ["ADMIN", "MANAGER", "USER", "TECHNICIAN"],
+      default: "USER"
+    },
+
+    // Přiřazené budovy
+    // ADMIN vidí všechny, ostatní jen svoje
+    assignedBuildings: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Building"
+      }
+    ],
+
+    // Status
+    isActive: {
+      type: Boolean,
+      default: true
+    },
+    lastLogin: {
+      type: Date,
+      default: null
+    }
+  },
+  { timestamps: true }
+);
+
 const Building = mongoose.model("Building", buildingSchema);
 const Module = mongoose.model("Module", moduleSchema);
 const SensorReading = mongoose.model("SensorReading", sensorReadingSchema);
 const Alert = mongoose.model("Alert", alertSchema);
+const User = mongoose.model("User", userSchema);
 
 module.exports = {
   Building,
   Module,
   SensorReading,
-  Alert
+  Alert,
+  User
 };

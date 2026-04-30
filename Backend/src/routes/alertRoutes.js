@@ -1,5 +1,7 @@
 const express = require("express");
-const { Alert, Module, Building } = require("../models");
+const { Alert } = require("../models");
+const AlertService = require("../services/alertService");
+const { filterByRole } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
@@ -9,16 +11,24 @@ router.get("/test", (req, res) => {
   });
 });
 
-router.get("/list", async (req, res) => {
+
+router.get("/list", filterByRole, async (req, res) => {
   try {
     const { buildingId, status } = req.query;
+    const { role, assignedBuildings } = req.userFilter;
 
+    // Sestavit filtr
     const filter = {};
 
-    if (buildingId) {
+    // Pokud user není ADMIN, vidí jen své budovy
+    if (role !== "ADMIN") {
+      filter.building = { $in: assignedBuildings };
+    } else if (buildingId) {
+      // ADMIN může filtrovat specifickou budovu
       filter.building = buildingId;
     }
 
+    // Filtr podle status
     if (status) {
       filter.status = status;
     }
@@ -39,9 +49,11 @@ router.get("/list", async (req, res) => {
   }
 });
 
-router.post("/resolve", async (req, res) => {
+
+router.post("/resolve", filterByRole, async (req, res) => {
   try {
     const { alertId } = req.body;
+    const { role } = req.userFilter;
 
     if (!alertId) {
       return res.status(400).json({
@@ -50,63 +62,10 @@ router.post("/resolve", async (req, res) => {
       });
     }
 
-    const alert = await Alert.findById(alertId);
+    // Vyřešit alert (Alert Engine se postará o update stavů)
+    const resolvedAlert = await AlertService.resolveAlert(alertId);
 
-    if (!alert) {
-      return res.status(404).json({
-        code: "alertNotFound",
-        message: "Alert was not found."
-      });
-    }
-
-    alert.status = "RESOLVED";
-    alert.resolvedAt = new Date();
-
-    await alert.save();
-
-    const activeModuleAlerts = await Alert.find({
-      moduleId: alert.moduleId,
-      status: "ACTIVE"
-    });
-
-    const module = await Module.findOne({
-      moduleId: alert.moduleId
-    });
-
-    if (module && activeModuleAlerts.length === 0) {
-      if (module.lastTemperature !== null && module.lastTemperature >= 45) {
-        module.status = "WARNING";
-      } else {
-        module.status = "ONLINE";
-      }
-
-      await module.save();
-    }
-
-    const activeBuildingAlerts = await Alert.find({
-      building: alert.building,
-      status: "ACTIVE"
-    });
-
-    if (activeBuildingAlerts.length > 0) {
-      await Building.findByIdAndUpdate(alert.building, {
-        status: "DANGER"
-      });
-    } else {
-      const warningModules = await Module.find({
-        building: alert.building,
-        status: "WARNING"
-      });
-
-      await Building.findByIdAndUpdate(alert.building, {
-        status: warningModules.length > 0 ? "WARNING" : "OK"
-      });
-    }
-
-    res.json({
-      message: "Alert was resolved.",
-      alert
-    });
+    res.json(resolvedAlert);
   } catch (error) {
     res.status(500).json({
       code: "internalError",
