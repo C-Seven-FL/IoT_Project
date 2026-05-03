@@ -26,7 +26,7 @@ twr_lis2dh12_result_g_t g_acc;
 void button_event_handler(twr_button_t *self, twr_button_event_t event, void *event_param)
 {
     // Log button event
-    twr_log_info("ID524342: Button:%i", event);
+    
 
     // Check event source
     if (event == TWR_BUTTON_EVENT_RELEASE)
@@ -34,17 +34,15 @@ void button_event_handler(twr_button_t *self, twr_button_event_t event, void *ev
         // Toggle LED pin state
         twr_led_set_mode(&led, TWR_LED_MODE_TOGGLE);
 
-         // Publish message on radio
-        button_click_count++;
-        twr_radio_pub_push_button(&button_click_count);
     }
 
     if (event == TWR_BUTTON_EVENT_PRESS)
     {
+        twr_log_info("%llx: Button:%i", (unsigned long long) twr_radio_get_my_id(), event);
         // Toggle LED pin state
         twr_led_set_mode(&led, TWR_LED_MODE_TOGGLE);
 
-         // Publish message on radio
+        // Publish message on radio
         button_click_count++;
         twr_radio_pub_push_button(&button_click_count);
     }
@@ -102,7 +100,7 @@ void application_init(void)
     // Initialize accelerometr
     twr_lis2dh12_init(&a, TWR_I2C_I2C0, 0x19);
     twr_lis2dh12_set_event_handler(&a, lis2_event_handler, NULL);
-    twr_lis2dh12_set_update_interval(&a, 1000);
+    twr_lis2dh12_set_update_interval(&a, 5000);
 
     // Initialize radio
     twr_radio_init(TWR_RADIO_MODE_NODE_SLEEPING);
@@ -115,7 +113,8 @@ void application_task(void)
 
 
     // Log task run and increment counter
-    twr_log_debug("ID524342: T:%.2f X:%f Y:%f Z:%f",
+    twr_log_debug("%llx: T:%.2f X:%f Y:%f Z:%f",
+            (unsigned long long) twr_radio_get_my_id(),
             g_temperature,
             g_acc.x_axis,
             g_acc.y_axis,

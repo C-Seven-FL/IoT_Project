@@ -1,0 +1,317 @@
+[
+    {
+        "id": "49be379716f0b9e5",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "db52742f5edfa774",
+        "type": "serial in",
+        "z": "49be379716f0b9e5",
+        "name": "",
+        "serial": "bbdbaf4bd4be4817",
+        "x": 200,
+        "y": 540,
+        "wires": [
+            [
+                "77cdf27372bfbd32",
+                "ed11b6231e321cde"
+            ]
+        ]
+    },
+    {
+        "id": "4fff3af1aa90ecc0",
+        "type": "debug",
+        "z": "49be379716f0b9e5",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 820,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "6f3b2a899a9887a9",
+        "type": "inject",
+        "z": "49be379716f0b9e5",
+        "name": "buttonData",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "# 3087.55 <I> aeb1435300e4: Button:0",
+        "payloadType": "str",
+        "x": 200,
+        "y": 480,
+        "wires": [
+            [
+                "ed11b6231e321cde"
+            ]
+        ]
+    },
+    {
+        "id": "c219d274a61d970d",
+        "type": "inject",
+        "z": "49be379716f0b9e5",
+        "name": "sensorData",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "# 8319.01 <D> aeb1435300e4: T:24.19 X:0.864000 Y:0.020000 Z:-0.596000",
+        "payloadType": "str",
+        "x": 190,
+        "y": 600,
+        "wires": [
+            [
+                "77cdf27372bfbd32"
+            ]
+        ]
+    },
+    {
+        "id": "77cdf27372bfbd32",
+        "type": "function",
+        "z": "49be379716f0b9e5",
+        "name": "sencorParser",
+        "func": "function parseData(input) {\n    const regex = /<D>\\s+([a-f0-9]+):\\s+T:([\\d.]+)\\s+X:([-\\d.]+)\\s+Y:([-\\d.]+)\\s+Z:([-\\d.]+)/i;\n\n    const match = input.match(regex);\n\n    if (!match) {\n        return null;\n    }\n\n    return {\n        device_id: match[1],\n        temperature: parseFloat(match[2]),\n        x: parseFloat(match[3]),\n        y: parseFloat(match[4]),\n        z: parseFloat(match[5]),\n    };\n}\n\nreturn parseData(msg.payload);",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 410,
+        "y": 600,
+        "wires": [
+            [
+                "7980f2ba9d3c075c"
+            ]
+        ]
+    },
+    {
+        "id": "ed11b6231e321cde",
+        "type": "function",
+        "z": "49be379716f0b9e5",
+        "name": "buttonParser",
+        "func": "function parseButton(str) {\n    const regex = /<I>\\s+([a-f0-9]+):\\s+Button:(\\d)/i;\n\n    const match = str.match(regex);\n\n    if (!match) return null;\n\n    return {\n        device_id: match[1],\n        alarm: true \n    };\n}\n\nreturn parseButton(msg.payload);",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 410,
+        "y": 480,
+        "wires": [
+            [
+                "b6b844a4a2c9503f"
+            ]
+        ]
+    },
+    {
+        "id": "d08015a6206fd437",
+        "type": "debug",
+        "z": "49be379716f0b9e5",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 820,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "0964a237bcfe5216",
+        "type": "http request",
+        "z": "49be379716f0b9e5",
+        "name": "",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "{{{host_url}}}",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [
+            {
+                "keyType": "Content-Type",
+                "keyValue": "",
+                "valueType": "application/json",
+                "valueValue": ""
+            },
+            {
+                "keyType": "other",
+                "keyValue": "X-API-Key",
+                "valueType": "msg",
+                "valueValue": "api"
+            }
+        ],
+        "x": 810,
+        "y": 540,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b6b844a4a2c9503f",
+        "type": "function",
+        "z": "49be379716f0b9e5",
+        "name": "buttonConstructor",
+        "func": "msg.payload = {\n    device_id: msg.device_id,\n    alarm: msg.alarm\n};\n\nconst dt = global.get(\"env\");\nmsg.api = dt.API_KEY;\nmsg.host_url = dt.API_URL + \"/data\";\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 610,
+        "y": 480,
+        "wires": [
+            [
+                "d08015a6206fd437",
+                "0964a237bcfe5216"
+            ]
+        ]
+    },
+    {
+        "id": "7980f2ba9d3c075c",
+        "type": "function",
+        "z": "49be379716f0b9e5",
+        "name": "sencorConstructor",
+        "func": "msg.payload = {\n    device_id: msg.device_id,\n    temperature: msg.temperature,\n    x: msg.x,\n    y: msg.y,\n    z: msg.z\n};\n\nconst dt = global.get(\"env\");\nmsg.api = dt.API_KEY;\nmsg.host_url = dt.API_URL + \"/data\";\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 610,
+        "y": 600,
+        "wires": [
+            [
+                "4fff3af1aa90ecc0",
+                "0964a237bcfe5216"
+            ]
+        ]
+    },
+    {
+        "id": "66ed7d3fbb4b4048",
+        "type": "inject",
+        "z": "49be379716f0b9e5",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "API_KEY",
+        "payloadType": "env",
+        "x": 190,
+        "y": 360,
+        "wires": [
+            [
+                "015e682643d91ce2"
+            ]
+        ]
+    },
+    {
+        "id": "015e682643d91ce2",
+        "type": "debug",
+        "z": "49be379716f0b9e5",
+        "name": "debug 4",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 360,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "2fd0f494717113e4",
+        "type": "comment",
+        "z": "49be379716f0b9e5",
+        "name": "env.get",
+        "info": "const dt = global.get(\"env\");\nmsg.payload = dt.API_KEY;\n\nreturn msg;",
+        "x": 150,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "bbdbaf4bd4be4817",
+        "type": "serial-port",
+        "name": "coremod",
+        "serialport": "/dev/ttyUSB0",
+        "serialbaud": "115200",
+        "databits": 8,
+        "parity": "none",
+        "stopbits": 1,
+        "waitfor": "",
+        "dtr": "none",
+        "rts": "none",
+        "cts": "none",
+        "dsr": "none",
+        "newline": "\\n",
+        "bin": "false",
+        "out": "char",
+        "addchar": "",
+        "responsetimeout": 10000
+    },
+    {
+        "id": "0ca17a1530112ffd",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-node-serialport": "2.0.3"
+        }
+    }
+]
