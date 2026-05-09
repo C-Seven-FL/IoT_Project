@@ -13,31 +13,14 @@
         "z": "49be379716f0b9e5",
         "name": "",
         "serial": "bbdbaf4bd4be4817",
-        "x": 200,
-        "y": 540,
+        "x": 120,
+        "y": 120,
         "wires": [
             [
                 "77cdf27372bfbd32",
                 "ed11b6231e321cde"
             ]
         ]
-    },
-    {
-        "id": "4fff3af1aa90ecc0",
-        "type": "debug",
-        "z": "49be379716f0b9e5",
-        "name": "debug 1",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 820,
-        "y": 600,
-        "wires": []
     },
     {
         "id": "6f3b2a899a9887a9",
@@ -60,8 +43,8 @@
         "topic": "",
         "payload": "# 3087.55 <I> aeb1435300e4: Button:0",
         "payloadType": "str",
-        "x": 200,
-        "y": 480,
+        "x": 120,
+        "y": 60,
         "wires": [
             [
                 "ed11b6231e321cde"
@@ -87,10 +70,10 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "payload": "# 8319.01 <D> aeb1435300e4: T:24.19 X:0.864000 Y:0.020000 Z:-0.596000",
+        "payload": "# 13485.15 <D> faedfa3rfawdf: T:24.00 X:1.048000 Y:-0.172000 Z:0.068000",
         "payloadType": "str",
-        "x": 190,
-        "y": 600,
+        "x": 110,
+        "y": 180,
         "wires": [
             [
                 "77cdf27372bfbd32"
@@ -102,18 +85,18 @@
         "type": "function",
         "z": "49be379716f0b9e5",
         "name": "sencorParser",
-        "func": "function parseData(input) {\n    const regex = /<D>\\s+([a-f0-9]+):\\s+T:([\\d.]+)\\s+X:([-\\d.]+)\\s+Y:([-\\d.]+)\\s+Z:([-\\d.]+)/i;\n\n    const match = input.match(regex);\n\n    if (!match) {\n        return null;\n    }\n\n    return {\n        device_id: match[1],\n        temperature: parseFloat(match[2]),\n        x: parseFloat(match[3]),\n        y: parseFloat(match[4]),\n        z: parseFloat(match[5]),\n    };\n}\n\nreturn parseData(msg.payload);",
+        "func": "function parseData(input) {\n    const regex = /<D>\\s+([a-z0-9]+):\\s+T:([\\d.]+)\\s+X:([-\\d.]+)\\s+Y:([-\\d.]+)\\s+Z:([-\\d.]+)/i;\n\n    const match = input.match(regex);\n\n    if (!match) {\n        return null;\n    }\n\n    return {\n        device_id: match[1],\n        temperature: parseFloat(match[2]),\n        x: parseFloat(match[3]),\n        y: parseFloat(match[4]),\n        z: parseFloat(match[5]),\n    };\n}\n\nmsg.payload = parseData(msg.payload);\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 410,
-        "y": 600,
+        "x": 330,
+        "y": 180,
         "wires": [
             [
-                "7980f2ba9d3c075c"
+                "766e649abb983632"
             ]
         ]
     },
@@ -122,37 +105,20 @@
         "type": "function",
         "z": "49be379716f0b9e5",
         "name": "buttonParser",
-        "func": "function parseButton(str) {\n    const regex = /<I>\\s+([a-f0-9]+):\\s+Button:(\\d)/i;\n\n    const match = str.match(regex);\n\n    if (!match) return null;\n\n    return {\n        device_id: match[1],\n        alarm: true \n    };\n}\n\nreturn parseButton(msg.payload);",
+        "func": "function parseButton(input) {\n\n    const regex = /<I>\\s+([a-f0-9]+):\\s+Button:(\\d)/i;\n\n    const match = input.match(regex);\n\n    if (!match) {\n        return null;\n    }\n\n    return {\n        device_id: match[1],\n        alarm: match[2] === \"0\"\n    };\n}\n\nconst result = parseButton(msg.payload);\n\nif (!result) {\n    return null;\n}\n\nif (result.alarm) {\n\n\n    flow.set(\"alarmMode\", true);\n\n    flow.set(\"lastAlarmDeviceButton\", result.device_id);\n\n    setTimeout(() => {\n        flow.set(\"alarmMode\", false);\n        flow.set(\"lastAlarmDeviceButton\", 0);\n    }, 60000);\n}\n\nmsg.payload = result;\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 410,
-        "y": 480,
+        "x": 330,
+        "y": 60,
         "wires": [
             [
-                "b6b844a4a2c9503f"
+                "3a39acd3dd756ede"
             ]
         ]
-    },
-    {
-        "id": "d08015a6206fd437",
-        "type": "debug",
-        "z": "49be379716f0b9e5",
-        "name": "debug 3",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 820,
-        "y": 480,
-        "wires": []
     },
     {
         "id": "0964a237bcfe5216",
@@ -183,30 +149,11 @@
                 "valueValue": "api"
             }
         ],
-        "x": 810,
-        "y": 540,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "b6b844a4a2c9503f",
-        "type": "function",
-        "z": "49be379716f0b9e5",
-        "name": "buttonConstructor",
-        "func": "msg.payload = {\n    device_id: msg.device_id,\n    alarm: msg.alarm\n};\n\nconst dt = global.get(\"env\");\nmsg.api = dt.API_KEY;\nmsg.host_url = dt.API_URL + \"/data\";\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 610,
-        "y": 480,
+        "x": 1170,
+        "y": 580,
         "wires": [
             [
-                "d08015a6206fd437",
-                "0964a237bcfe5216"
+                "71670a8166e212ac"
             ]
         ]
     },
@@ -215,18 +162,17 @@
         "type": "function",
         "z": "49be379716f0b9e5",
         "name": "sencorConstructor",
-        "func": "msg.payload = {\n    device_id: msg.device_id,\n    temperature: msg.temperature,\n    x: msg.x,\n    y: msg.y,\n    z: msg.z\n};\n\nconst dt = global.get(\"env\");\nmsg.api = dt.API_KEY;\nmsg.host_url = dt.API_URL + \"/data\";\n\nreturn msg;",
+        "func": "const dt = global.get(\"env\");\n\nmsg.payload = {\n    gateway_id: env.GATEWAY_ID,\n    measurements: msg.payload\n};\n\nmsg.host_url = dt.API_URL + \"/data\";\nmsg.api = dt.API_KEY;\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 610,
-        "y": 600,
+        "x": 970,
+        "y": 580,
         "wires": [
             [
-                "4fff3af1aa90ecc0",
                 "0964a237bcfe5216"
             ]
         ]
@@ -252,8 +198,8 @@
         "topic": "",
         "payload": "API_KEY",
         "payloadType": "env",
-        "x": 190,
-        "y": 360,
+        "x": 130,
+        "y": 920,
         "wires": [
             [
                 "015e682643d91ce2"
@@ -272,8 +218,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 360,
-        "y": 360,
+        "x": 300,
+        "y": 920,
         "wires": []
     },
     {
@@ -282,9 +228,748 @@
         "z": "49be379716f0b9e5",
         "name": "env.get",
         "info": "const dt = global.get(\"env\");\nmsg.payload = dt.API_KEY;\n\nreturn msg;",
-        "x": 150,
-        "y": 320,
+        "x": 90,
+        "y": 880,
         "wires": []
+    },
+    {
+        "id": "3a39acd3dd756ede",
+        "type": "debug",
+        "z": "49be379716f0b9e5",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 500,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "f451f9204bee9eb4",
+        "type": "sqlite",
+        "z": "49be379716f0b9e5",
+        "mydb": "c2f4c3cbf8d16ef1",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "BUFFER",
+        "x": 820,
+        "y": 340,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "e5c17882955e1b25",
+        "type": "inject",
+        "z": "49be379716f0b9e5",
+        "name": "dbTEST",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 100,
+        "y": 1140,
+        "wires": [
+            [
+                "fc0130b8a81a6207"
+            ]
+        ]
+    },
+    {
+        "id": "fc0130b8a81a6207",
+        "type": "function",
+        "z": "49be379716f0b9e5",
+        "name": "dbFuncTEST",
+        "func": "msg.topic = `\nCREATE TABLE IF NOT EXISTS measurements (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    device_id TEXT,\n    temperature REAL,\n    x REAL,\n    y REAL,\n    z REAL,\n    status INTEGER,\n    created_at INTEGER\n);\n`;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 290,
+        "y": 1140,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "fdf21417d81ec593",
+        "type": "function",
+        "z": "49be379716f0b9e5",
+        "name": "buildInsert",
+        "func": "const data = msg.payload;\n\nmsg.topic = `\nINSERT INTO measurements (\n    device_id,\n    temperature,\n    x,\n    y,\n    z,\n    status,\n    created_at\n)\nVALUES (\n    '${data.device_id}',\n    ${data.temperature},\n    ${data.x},\n    ${data.y},\n    ${data.z},\n    1,\n    ${Date.now()}\n);\n`;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 630,
+        "y": 340,
+        "wires": [
+            [
+                "f451f9204bee9eb4"
+            ]
+        ]
+    },
+    {
+        "id": "597d63d8bea749b1",
+        "type": "function",
+        "z": "49be379716f0b9e5",
+        "name": "lookDB",
+        "func": "msg.topic = \"SELECT * FROM measurements\";\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 280,
+        "y": 1000,
+        "wires": [
+            [
+                "01d0ba84cbd89d9b"
+            ]
+        ]
+    },
+    {
+        "id": "9718ea6168a37874",
+        "type": "inject",
+        "z": "49be379716f0b9e5",
+        "name": "lookDBInit",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 120,
+        "y": 1000,
+        "wires": [
+            [
+                "597d63d8bea749b1"
+            ]
+        ]
+    },
+    {
+        "id": "3c81d124816c6c39",
+        "type": "function",
+        "z": "49be379716f0b9e5",
+        "name": "local buffer",
+        "func": "const data = msg.payload;\n\nif (!data) {\n    return null;\n}\n\nlet measurements = flow.get(\"measurements\") || {};\n\nif (!measurements[data.device_id]) {\n    measurements[data.device_id] = [];\n}\n\nmeasurements[data.device_id].push(data);\n\nflow.set(\"measurements\", measurements);\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 830,
+        "y": 180,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "56b77626173ab0d9",
+        "type": "inject",
+        "z": "49be379716f0b9e5",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "300",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 110,
+        "y": 340,
+        "wires": [
+            [
+                "2a207f789cab4808",
+                "0de0da86f25d7a1b",
+                "bc4456bea1b81583"
+            ]
+        ]
+    },
+    {
+        "id": "2a207f789cab4808",
+        "type": "function",
+        "z": "49be379716f0b9e5",
+        "name": "aggregate",
+        "func": "const measurements = flow.get(\"measurements\") || {};\n\nconst result = [];\n\nfor (const deviceId in measurements) {\n\n    const records = measurements[deviceId];\n\n    if (records.length === 0) {\n        continue;\n    }\n\n    let tempSum = 0;\n    let x_last = 0;\n    let y_last = 0;\n    let z_last = 0;\n\n    for (const record of records) {\n        tempSum += record.temperature;\n        x_last = record.x;\n        y_last = record.y;\n        z_last = record.z;\n    }\n\n    result.push({\n        device_id: deviceId,\n        temperature: Number((tempSum / records.length).toFixed(2)),\n        status: true,\n        x: Number(x_last.toFixed(2)),\n        y: Number(y_last.toFixed(2)),\n        z: Number(z_last.toFixed(2)),\n    });\n}\n\nflow.set(\"measurements\", {});\n\nmsg.payload = result;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 320,
+        "y": 340,
+        "wires": [
+            [
+                "55ef4af913c70744"
+            ]
+        ]
+    },
+    {
+        "id": "3cbc377c16594e24",
+        "type": "inject",
+        "z": "49be379716f0b9e5",
+        "name": "clear data",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 120,
+        "y": 1080,
+        "wires": [
+            [
+                "c36e707716c687ed"
+            ]
+        ]
+    },
+    {
+        "id": "c36e707716c687ed",
+        "type": "function",
+        "z": "49be379716f0b9e5",
+        "name": "function 2",
+        "func": "msg.topic = `\nDELETE FROM measurements;\n`;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 280,
+        "y": 1080,
+        "wires": [
+            [
+                "01d0ba84cbd89d9b"
+            ]
+        ]
+    },
+    {
+        "id": "2769379a9913e563",
+        "type": "function",
+        "z": "49be379716f0b9e5",
+        "name": "Select all from DB",
+        "func": "msg.topic = `\nSELECT * FROM measurements;\n`;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 530,
+        "y": 580,
+        "wires": [
+            [
+                "9136987d27a98969"
+            ]
+        ]
+    },
+    {
+        "id": "0de0da86f25d7a1b",
+        "type": "delay",
+        "z": "49be379716f0b9e5",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 320,
+        "y": 580,
+        "wires": [
+            [
+                "2769379a9913e563"
+            ]
+        ]
+    },
+    {
+        "id": "4fdfb2c5fb3a38f6",
+        "type": "inject",
+        "z": "49be379716f0b9e5",
+        "name": "select test",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 320,
+        "y": 640,
+        "wires": [
+            [
+                "2769379a9913e563"
+            ]
+        ]
+    },
+    {
+        "id": "9136987d27a98969",
+        "type": "sqlite",
+        "z": "49be379716f0b9e5",
+        "mydb": "c2f4c3cbf8d16ef1",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "BUFFER",
+        "x": 780,
+        "y": 580,
+        "wires": [
+            [
+                "7980f2ba9d3c075c"
+            ]
+        ]
+    },
+    {
+        "id": "71670a8166e212ac",
+        "type": "function",
+        "z": "49be379716f0b9e5",
+        "name": "response check",
+        "func": "if (msg.statusCode >= 200 && msg.statusCode < 300) {\n    msg.payload = true;\n    return msg;\n}\nmsg.payload = false;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1360,
+        "y": 580,
+        "wires": [
+            [
+                "665ecc3bebbe01a5"
+            ]
+        ]
+    },
+    {
+        "id": "4c983441b50437aa",
+        "type": "function",
+        "z": "49be379716f0b9e5",
+        "name": "clear db",
+        "func": "msg.topic = `\nDELETE FROM measurements;\n`;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1660,
+        "y": 580,
+        "wires": [
+            [
+                "233132844c44b626"
+            ]
+        ]
+    },
+    {
+        "id": "665ecc3bebbe01a5",
+        "type": "switch",
+        "z": "49be379716f0b9e5",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "true"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 1530,
+        "y": 580,
+        "wires": [
+            [
+                "4c983441b50437aa"
+            ]
+        ]
+    },
+    {
+        "id": "233132844c44b626",
+        "type": "sqlite",
+        "z": "49be379716f0b9e5",
+        "mydb": "c2f4c3cbf8d16ef1",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "BUFFER",
+        "x": 1800,
+        "y": 580,
+        "wires": [
+            [
+                "f05593ab6f8b99c1"
+            ]
+        ]
+    },
+    {
+        "id": "f05593ab6f8b99c1",
+        "type": "debug",
+        "z": "49be379716f0b9e5",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1940,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "bc4456bea1b81583",
+        "type": "delay",
+        "z": "49be379716f0b9e5",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "10",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 320,
+        "y": 460,
+        "wires": [
+            [
+                "fde7849259d3f41f"
+            ]
+        ]
+    },
+    {
+        "id": "fde7849259d3f41f",
+        "type": "function",
+        "z": "49be379716f0b9e5",
+        "name": "clean 24h",
+        "func": "const now = Date.now();\n\nconst ttl = 24 * 60 * 60 * 1000;\n\nconst threshold = now - ttl;\n\nmsg.topic = `\nDELETE FROM measurements\nWHERE created_at < ${threshold};\n`;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 500,
+        "y": 460,
+        "wires": [
+            [
+                "f451f9204bee9eb4"
+            ]
+        ]
+    },
+    {
+        "id": "e7da65f133ccbde9",
+        "type": "switch",
+        "z": "49be379716f0b9e5",
+        "name": "",
+        "property": "$flowContext(\"alarmMode\")",
+        "propertyType": "jsonata",
+        "rules": [
+            {
+                "t": "true"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 650,
+        "y": 180,
+        "wires": [
+            [
+                "4478f514e83f1c28"
+            ],
+            [
+                "3c81d124816c6c39"
+            ]
+        ]
+    },
+    {
+        "id": "4478f514e83f1c28",
+        "type": "link out",
+        "z": "49be379716f0b9e5",
+        "name": "link out 1",
+        "mode": "link",
+        "links": [
+            "0e920dbe5c1d64ec"
+        ],
+        "x": 775,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "0e920dbe5c1d64ec",
+        "type": "link in",
+        "z": "49be379716f0b9e5",
+        "name": "link in 1",
+        "links": [
+            "4478f514e83f1c28"
+        ],
+        "x": 645,
+        "y": 640,
+        "wires": [
+            [
+                "4350385839586c81"
+            ]
+        ]
+    },
+    {
+        "id": "766e649abb983632",
+        "type": "function",
+        "z": "49be379716f0b9e5",
+        "name": "detector",
+        "func": "const data = msg.payload;\n\nif (!data) {\n    return null;\n}\n\nconst deviceId = data.device_id;\n\n\n\nfunction activateAlarm(type) {\n\n    flow.set(\"alarmMode\", true);\n\n    flow.set(type, true);\n\n    const existingTimer =\n        flow.get(type + \"_timer\");\n\n    if (existingTimer) {\n        clearTimeout(existingTimer);\n    }\n\n    const timer = setTimeout(() => {\n\n        flow.set(type, false);\n\n        flow.set(type + \"_timer\", null);\n\n        const earthquake =\n            flow.get(\"alarmEarthquake\");\n\n        const button =\n            flow.get(\"alarmButton\");\n\n        const temperature =\n            flow.get(\"alarmTemperature\");\n\n        if (\n            !earthquake &&\n            !button &&\n            !temperature\n        ) {\n            flow.set(\"alarmMode\", false);\n        }\n\n    }, 60000);\n\n    flow.set(type + \"_timer\", timer);\n}\n\n\n\nlet buttonSOS = false;\nlet temperatureAlarm = false;\nlet accelerometerAlarm = false;\n\n\n\nconst lastAlarmDevice =\n    flow.get(\"lastAlarmDeviceButton\");\n\nif (lastAlarmDevice === deviceId) {\n\n    buttonSOS = true;\n\n    activateAlarm(\"alarmButton\");\n}\n\n\n\nif (data.temperature >= 40) {\n\n    temperatureAlarm = true;\n\n    activateAlarm(\"alarmTemperature\");\n}\n\n\n\nlet previousMeasurements =\n    flow.get(\"previousMeasurements\") || {};\n\nconst previous =\n    previousMeasurements[deviceId];\n\nif (previous) {\n\n    const dx =\n        Math.abs(data.x - previous.x);\n\n    const dy =\n        Math.abs(data.y - previous.y);\n\n    const dz =\n        Math.abs(data.z - previous.z);\n\n    if (\n        dx >= 0.1 ||\n        dy >= 0.1 ||\n        dz >= 0.1\n    ) {\n\n        accelerometerAlarm = true;\n\n        activateAlarm(\"alarmEarthquake\");\n    }\n}\n\n\n\npreviousMeasurements[deviceId] = {\n    x: data.x,\n    y: data.y,\n    z: data.z\n};\n\nflow.set(\n    \"previousMeasurements\",\n    previousMeasurements\n);\n\n\n\nmsg.payload = {\n    device_id: data.device_id,\n    temperature: Number(data.temperature.toFixed(2)),\n    x: Number(data.x.toFixed(3)),\n    y: Number(data.y.toFixed(3)),\n    z: Number(data.z.toFixed(3)),\n    buttonSOS,\n    temperatureAlarm,\n    accelerometerAlarm,\n    timestamp: Date.now()\n};\n\n\n\nmsg.alarmMode =\n    buttonSOS ||\n    temperatureAlarm ||\n    accelerometerAlarm;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 500,
+        "y": 180,
+        "wires": [
+            [
+                "e7da65f133ccbde9"
+            ]
+        ]
+    },
+    {
+        "id": "01d0ba84cbd89d9b",
+        "type": "sqlite",
+        "z": "49be379716f0b9e5",
+        "mydb": "c2f4c3cbf8d16ef1",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "BUFFER",
+        "x": 480,
+        "y": 1040,
+        "wires": [
+            [
+                "a2a3334e663b12c5"
+            ]
+        ]
+    },
+    {
+        "id": "a2a3334e663b12c5",
+        "type": "debug",
+        "z": "49be379716f0b9e5",
+        "name": "debug 6",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 640,
+        "y": 1040,
+        "wires": []
+    },
+    {
+        "id": "4350385839586c81",
+        "type": "function",
+        "z": "49be379716f0b9e5",
+        "name": "list_help",
+        "func": "const data = msg.payload;\n\nmsg.payload = [data]\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 780,
+        "y": 640,
+        "wires": [
+            [
+                "7980f2ba9d3c075c"
+            ]
+        ]
+    },
+    {
+        "id": "2d0114fdebf671aa",
+        "type": "function",
+        "z": "49be379716f0b9e5",
+        "name": "function 1",
+        "func": "let measurements = flow.get(\"measurements\") || {};\n\nmsg.payload = measurements;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 260,
+        "y": 1200,
+        "wires": [
+            [
+                "1acc444c91d6d398"
+            ]
+        ]
+    },
+    {
+        "id": "1acc444c91d6d398",
+        "type": "debug",
+        "z": "49be379716f0b9e5",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 420,
+        "y": 1200,
+        "wires": []
+    },
+    {
+        "id": "2f01cd1ef78c1174",
+        "type": "inject",
+        "z": "49be379716f0b9e5",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 100,
+        "y": 1200,
+        "wires": [
+            [
+                "2d0114fdebf671aa"
+            ]
+        ]
+    },
+    {
+        "id": "55ef4af913c70744",
+        "type": "split",
+        "z": "49be379716f0b9e5",
+        "name": "",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "property": "payload",
+        "x": 470,
+        "y": 340,
+        "wires": [
+            [
+                "fdf21417d81ec593"
+            ]
+        ]
+    },
+    {
+        "id": "5398f9c804ba16cd",
+        "type": "inject",
+        "z": "49be379716f0b9e5",
+        "name": "senAlarmData",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "# 13485.15 <D> faedfa3rfawdf: T:44.00 X:1.048000 Y:-0.172000 Z:0.068000",
+        "payloadType": "str",
+        "x": 110,
+        "y": 240,
+        "wires": [
+            [
+                "77cdf27372bfbd32"
+            ]
+        ]
     },
     {
         "id": "bbdbaf4bd4be4817",
@@ -307,11 +992,18 @@
         "responsetimeout": 10000
     },
     {
-        "id": "0ca17a1530112ffd",
+        "id": "c2f4c3cbf8d16ef1",
+        "type": "sqlitedb",
+        "db": "/home/yaro/.node-red/gateway.db",
+        "mode": "RWC"
+    },
+    {
+        "id": "afc23f4556598e13",
         "type": "global-config",
         "env": [],
         "modules": {
-            "node-red-node-serialport": "2.0.3"
+            "node-red-node-serialport": "2.0.3",
+            "node-red-node-sqlite": "2.0.1"
         }
     }
 ]
