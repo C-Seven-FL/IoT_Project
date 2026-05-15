@@ -1,0 +1,115 @@
+/* ═══ Page-specific styles ═══ */
+
+/* ── Auth Pages ── */
+.auth-container{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 80px);padding:24px}
+.auth-card{background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-lg);padding:40px;width:100%;max-width:440px;animation:slideUp .4s ease}
+.auth-logo{text-align:center;margin-bottom:32px}
+.auth-logo h1{font-size:1.5rem;font-weight:800;color:var(--accent-primary);letter-spacing:-0.02em}
+.auth-logo p{color:var(--text-tertiary);font-size:.85rem;margin-top:4px}
+.auth-form{display:flex;flex-direction:column;gap:16px}
+.auth-footer{text-align:center;margin-top:20px;font-size:.85rem;color:var(--text-tertiary)}
+.auth-footer a{color:var(--accent-primary);text-decoration:none;font-weight:600}
+.auth-footer a:hover{text-decoration:underline}
+
+/* ── Dashboard ── */
+.dashboard-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
+.stat-card{background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-lg);padding:20px;text-align:center;transition:all var(--transition-base)}
+.stat-card:hover{border-color:var(--border-color-hover);transform:translateY(-2px)}
+.stat-value{font-size:2rem;font-weight:800;color:var(--text-primary);line-height:1}
+.stat-label{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);margin-top:6px}
+.stat-card.danger .stat-value{color:var(--accent-danger)}
+.stat-card.warning .stat-value{color:var(--accent-warning)}
+.stat-card.ok .stat-value{color:var(--status-ok)}
+
+.building-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.building-card{cursor:pointer;position:relative;overflow:hidden}
+.building-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;transition:background var(--transition-base)}
+.building-card[data-status="OK"]::before{background:var(--status-ok)}
+.building-card[data-status="WARNING"]::before{background:var(--status-warning)}
+.building-card[data-status="DANGER"]::before{background:var(--status-danger);animation:dangerPulse 2s infinite}
+@keyframes dangerPulse{0%,100%{opacity:1}50%{opacity:.5}}
+.building-name{font-size:1.1rem;font-weight:700}
+.building-address{color:var(--text-tertiary);font-size:.85rem;margin-top:2px}
+.building-meta{display:flex;gap:16px;margin-top:12px;font-size:.8rem;color:var(--text-secondary)}
+.building-meta span{display:flex;align-items:center;gap:4px}
+
+/* ── Building Detail ── */
+.building-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:16px}
+.building-header-info h1{font-size:1.75rem;font-weight:800;letter-spacing:-0.02em}
+.building-header-info p{color:var(--text-tertiary);font-size:.9rem}
+.building-actions{display:flex;gap:8px}
+.crisis-indicators{display:flex;gap:12px;margin-bottom:24px}
+.crisis-badge{padding:8px 16px;border-radius:var(--radius-md);font-size:.85rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.crisis-badge.active{background:var(--status-danger-bg);color:var(--accent-danger);border:1px solid rgba(239,68,68,0.3);animation:criticalPulse 2s infinite}
+.crisis-badge.inactive{background:var(--bg-tertiary);color:var(--text-tertiary);border:1px solid var(--border-color)}
+
+.floors-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.floor-card{background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-lg);padding:20px;transition:all var(--transition-base);position:relative;overflow:hidden}
+.floor-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.floor-card[data-status="OK"]::before{background:var(--status-ok)}
+.floor-card[data-status="WARNING"]::before{background:var(--status-warning)}
+.floor-card[data-status="DANGER"]::before{background:var(--status-danger)}
+.floor-card:hover{border-color:var(--border-color-hover);transform:translateY(-2px)}
+.floor-number{font-size:1rem;font-weight:700;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.floor-data{display:flex;flex-direction:column;gap:10px}
+.floor-data-row{display:flex;justify-content:space-between;align-items:center;font-size:.8rem}
+.floor-data-row .label{color:var(--text-tertiary);display:flex;align-items:center;gap:6px}
+.floor-data-row .value{font-weight:600;color:var(--text-primary)}
+.floor-data-row .value.danger{color:var(--accent-danger)}
+.floor-data-row .value.warning{color:var(--accent-warning)}
+.floor-online{display:flex;align-items:center;gap:6px;font-size:.75rem;margin-top:8px;padding-top:8px;border-top:1px solid var(--border-color)}
+.floor-online .dot{width:8px;height:8px;border-radius:50%}
+.floor-online .dot.online{background:var(--status-ok);box-shadow:0 0 6px var(--status-ok)}
+.floor-online .dot.offline{background:var(--status-offline)}
+
+/* ── Status Banner (BuildingStatusVisualizer) ── */
+.status-banner{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-radius:var(--radius-lg);margin-bottom:20px;border:1px solid var(--border-color);font-weight:700}
+.status-banner-label{font-size:.75rem;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em}
+.status-banner-value{font-size:1rem}
+.status-banner-ok{background:var(--status-ok-bg);border-color:rgba(34,197,94,0.3)}
+.status-banner-ok .status-banner-value{color:var(--status-ok)}
+.status-banner-warning{background:var(--status-warning-bg);border-color:rgba(234,179,8,0.3)}
+.status-banner-warning .status-banner-value{color:var(--status-warning)}
+.status-banner-danger{background:var(--status-danger-bg);border-color:rgba(239,68,68,0.4);animation:bannerDangerPulse 1.6s infinite}
+.status-banner-danger .status-banner-value{color:var(--status-danger)}
+@keyframes bannerDangerPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.4)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
+
+/* SOS aktivní crisis-badge — ještě silnější červené pulzování */
+.crisis-badge.sos-active{box-shadow:0 0 0 0 rgba(239,68,68,0.6);animation:sosPulse 1.2s infinite}
+@keyframes sosPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.6)}50%{box-shadow:0 0 0 10px rgba(239,68,68,0)}}
+
+/* ── Alert Page ── */
+.alert-filters{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+.alert-list{display:flex;flex-direction:column;gap:10px}
+.alert-item{background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-lg);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;transition:all var(--transition-base)}
+.alert-item:hover{border-color:var(--border-color-hover)}
+.alert-item[data-severity="CRITICAL"]{border-left:3px solid var(--accent-danger)}
+.alert-item[data-severity="HIGH"]{border-left:3px solid #fb923c}
+.alert-item[data-severity="MEDIUM"]{border-left:3px solid var(--accent-warning)}
+.alert-item[data-severity="LOW"]{border-left:3px solid var(--accent-secondary)}
+.alert-info{flex:1}
+.alert-type{font-weight:700;font-size:.9rem;display:flex;align-items:center;gap:8px}
+.alert-message{color:var(--text-secondary);font-size:.85rem;margin-top:4px}
+.alert-meta{display:flex;gap:12px;font-size:.75rem;color:var(--text-tertiary);margin-top:6px}
+
+/* Per Components (FE) > AlertDashboard:
+   "Pokud je typ alertu FIRE, pozadí karty musí pulzovat červeně." */
+.alert-fire-pulse{
+  background:linear-gradient(90deg,rgba(239,68,68,0.18),rgba(239,68,68,0.05));
+  border-color:rgba(239,68,68,0.5);
+  animation:fireBgPulse 1.4s infinite;
+}
+@keyframes fireBgPulse{
+  0%,100%{background-color:rgba(239,68,68,0.18);box-shadow:0 0 0 0 rgba(239,68,68,0.45)}
+  50%{background-color:rgba(239,68,68,0.32);box-shadow:0 0 0 6px rgba(239,68,68,0)}
+}
+
+/* SOS alert — modré výrazné zvýraznění */
+.alert-sos{border-color:rgba(239,68,68,0.5);background:rgba(239,68,68,0.05)}
+
+@media(max-width:768px){
+  .dashboard-stats{grid-template-columns:repeat(2,1fr)}
+  .building-grid{grid-template-columns:1fr}
+  .floors-grid{grid-template-columns:1fr}
+  .alert-item{flex-direction:column;align-items:flex-start}
+}
