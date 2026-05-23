@@ -12,18 +12,27 @@ router.get("/test", (req, res) => {
 
 router.post("/create", async (req, res) => {
   try {
-    const { gatewayId, moduleId, building, floor, temperature, accelerometer, accelerometerAlarm, buttonPressed, measuredAt } = req.body;
+    const {
+      gatewayId,
+      moduleId,
+      temperature,
+      accelerometer,
+      accelerometerAlarm,
+      buttonPressed,
+      measuredAt
+    } = req.body;
 
     // Validace
-    if (!gatewayId || !moduleId || !building || floor === undefined) {
+    if (!gatewayId || !moduleId) {
       return res.status(400).json({
         code: "invalidDtoIn",
-        message: "gatewayId, moduleId, building and floor are required."
+        message: "gatewayId and moduleId are required."
       });
     }
 
-    // Najít modul (ověřit existenci)
+    // Najít modul podle moduleId
     const module = await Module.findOne({ moduleId });
+
     if (!module) {
       return res.status(404).json({
         code: "moduleNotFound",
@@ -31,29 +40,54 @@ router.post("/create", async (req, res) => {
       });
     }
 
-    if (temperature !== undefined) module.lastTemperature = temperature;
-    if (accelerometer !== undefined) module.lastAccelerometer = accelerometer;
-    module.lastSeen = measuredAt || new Date();
+    // Modul musí mít přiřazenou budovu a patro.
+    // Tyto hodnoty se už neposílají z requestu, ale berou se z DB.
+    if (!module.building || module.floor === undefined) {
+      return res.status(409).json({
+        code: "moduleLocationMissing",
+        message: "Module does not have assigned building or floor."
+      });
+    }
+
+    const measuredAtValue = measuredAt || new Date();
+
+    // Aktualizovat poslední známý stav modulu
+    if (temperature !== undefined) {
+      module.lastTemperature = temperature;
+    }
+
+    if (accelerometer !== undefined) {
+      module.lastAccelerometer = accelerometer;
+    }
+
+    module.lastSeen = measuredAtValue;
     await module.save();
 
     // Uložit telemetrii
     const sensorReading = await SensorReading.create({
       gatewayId,
       moduleId,
-      building,
-      floor,
+
+      // Lokace se bere z modulu, ne z requestu
+      building: module.building,
+      floor: module.floor,
+
       temperature,
       accelerometer,
+      accelerometerAlarm,
       buttonPressed,
-      measuredAt: measuredAt || new Date()
+      measuredAt: measuredAtValue
     });
 
-    // Spustit Alert Engine!
+    // Spustit Alert Engine
     await AlertService.processTelemetry({
       gatewayId,
       moduleId,
-      building,
-      floor,
+
+      // Alert engine také dostane lokaci podle modulu
+      building: module.building,
+      floor: module.floor,
+
       temperature,
       accelerometer,
       accelerometerAlarm,
