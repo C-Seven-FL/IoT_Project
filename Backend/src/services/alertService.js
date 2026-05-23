@@ -26,13 +26,8 @@ class AlertService {
       }
 
       // 3. Akcelerometr (Zemětřesení/Narušení)
-      if (accelerometer) {
-        const accMagnitude = Math.sqrt(accelerometer.x ** 2 + accelerometer.y ** 2 + accelerometer.z ** 2);
-        if (accMagnitude >= this.THRESHOLDS.ACCELEROMETER.CRITICAL) {
-          await this.createAlert({ building, gatewayId, moduleId, floor, type: "EARTHQUAKE", severity: "CRITICAL", message: `KRITICKÉ ZRYCHLENÍ: ${accMagnitude.toFixed(2)}g na ${moduleId}` });
-        } else if (accMagnitude >= this.THRESHOLDS.ACCELEROMETER.WARNING) {
-          await this.createAlert({ building, gatewayId, moduleId, floor, type: "EARTHQUAKE", severity: "HIGH", message: `Zvýšené zrychlení: ${accMagnitude.toFixed(2)}g na ${moduleId}` });
-        }
+      if (telemetryData.accelerometerAlarm) {
+        await this.createAlert({ building, gatewayId, moduleId, floor, type: "EARTHQUAKE", severity: "CRITICAL", message: `Otřes detekován: hardwarový alarm na modulu ${moduleId}` });
       }
 
       // 4. Aktualizace statusů
