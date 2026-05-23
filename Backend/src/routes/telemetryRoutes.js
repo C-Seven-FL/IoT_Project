@@ -12,7 +12,7 @@ router.get("/test", (req, res) => {
 
 router.post("/create", async (req, res) => {
   try {
-    const { gatewayId, moduleId, building, floor, temperature, accelerometer, buttonPressed, measuredAt } = req.body;
+    const { gatewayId, moduleId, building, floor, temperature, accelerometer, accelerometerAlarm, buttonPressed, measuredAt } = req.body;
 
     // Validace
     if (!gatewayId || !moduleId || !building || floor === undefined) {
@@ -56,6 +56,7 @@ router.post("/create", async (req, res) => {
       floor,
       temperature,
       accelerometer,
+      accelerometerAlarm,
       buttonPressed,
       measuredAt: sensorReading.measuredAt
     });
