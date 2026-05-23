@@ -31,6 +31,11 @@ router.post("/create", async (req, res) => {
       });
     }
 
+    if (temperature !== undefined) module.lastTemperature = temperature;
+    if (accelerometer !== undefined) module.lastAccelerometer = accelerometer;
+    module.lastSeen = measuredAt || new Date();
+    await module.save();
+
     // Uložit telemetrii
     const sensorReading = await SensorReading.create({
       gatewayId,
