@@ -1,7 +1,7 @@
 // API Client — fetch wrapper for Smart Guard backend.
 // V React verzi posíláme při 401 globální event `smartguard:unauthorized`,
 // AuthContext ho odchytí a uživatele odhlásí + přesměruje router.
-const API_BASE = '/api';
+const API_BASE =  import.meta.env.VITE_API_URL || '/api';
 const TOKEN_KEY = 'smartguard_token';
 
 export function setAuthToken(token) {
