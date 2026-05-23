@@ -5,30 +5,50 @@ const { filterByRole } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-router.get("/test", (req, res) => {
-  res.json({
-    message: "Alert route works"
-  });
-});
-
 
 router.get("/list", filterByRole, async (req, res) => {
   try {
     const { buildingId, status } = req.query;
     const { role, assignedBuildings } = req.userFilter;
 
-    // Sestavit filtr
     const filter = {};
 
-    // Pokud user není ADMIN, vidí jen své budovy
-    if (role !== "ADMIN") {
-      filter.building = { $in: assignedBuildings };
-    } else if (buildingId) {
-      // ADMIN může filtrovat specifickou budovu
-      filter.building = buildingId;
+    // ADMIN a RESCUER vidí všechny alerty.
+    // USER vidí pouze alerty ze svých přiřazených budov.
+    if (role === "USER") {
+      const assigned = assignedBuildings || [];
+
+      if (assigned.length === 0) {
+        return res.json({
+          itemList: [],
+          total: 0
+        });
+      }
+
+      if (buildingId) {
+        const canAccessBuilding = assigned.some(
+          (id) => String(id) === String(buildingId)
+        );
+
+        if (!canAccessBuilding) {
+          return res.json({
+            itemList: [],
+            total: 0
+          });
+        }
+
+        filter.building = buildingId;
+      } else {
+        filter.building = { $in: assigned };
+      }
+    } else {
+      // ADMIN / RESCUER / SYSTEM vidí všechno,
+      // ale pokud přijde buildingId, můžou filtrovat konkrétní budovu.
+      if (buildingId) {
+        filter.building = buildingId;
+      }
     }
 
-    // Filtr podle status
     if (status) {
       filter.status = status;
     }
