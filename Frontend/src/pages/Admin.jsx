@@ -10,14 +10,20 @@ export default function AdminPanel() {
   const showToast = useToast();
   const [buildings, setBuildings] = useState([]);
   const [modules, setModules] = useState([]);
+  const [pendingApprovals, setPendingApprovals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   async function load() {
     try {
-      const [b, m] = await Promise.all([api.buildingList(), api.moduleList()]);
+      const [b, m, p] = await Promise.all([
+        api.buildingList(),
+        api.moduleList(),
+        api.userPendingApprovals()
+      ]);
       setBuildings(b.itemList || []);
       setModules(m.itemList || []);
+      setPendingApprovals(p.itemList || []);
       setLoading(false);
     } catch (e) {
       setError(e);
@@ -35,6 +41,48 @@ export default function AdminPanel() {
     });
     return m;
   }, [modules]);
+
+  const buildingNameById = useMemo(() => {
+    const m = {};
+    buildings.forEach((b) => {
+      m[b._id] = b.name;
+    });
+    return m;
+  }, [buildings]);
+
+  function getRequestedBuildingName(user) {
+    if (!user.requestedBuilding) return '—';
+
+    if (typeof user.requestedBuilding === 'object') {
+      return user.requestedBuilding.name || user.requestedBuilding._id || '—';
+    }
+
+    return buildingNameById[user.requestedBuilding] || user.requestedBuilding;
+  }
+
+  async function handleApprove(user) {
+    if (!confirm(`Schválit přístup uživatele „${user.firstName} ${user.lastName}" k budově „${getRequestedBuildingName(user)}"?`)) return;
+
+    try {
+      await api.userApproveBuilding(user._id);
+      showToast('Přístup k budově schválen', 'success');
+      load();
+    } catch (e) {
+      showToast(e.message || 'Chyba', 'error');
+    }
+  }
+
+  async function handleReject(user) {
+    if (!confirm(`Odmítnout přístup uživatele „${user.firstName} ${user.lastName}" k budově „${getRequestedBuildingName(user)}"?`)) return;
+
+    try {
+      await api.userRejectBuilding(user._id);
+      showToast('Žádost byla odmítnuta', 'success');
+      load();
+    } catch (e) {
+      showToast(e.message || 'Chyba', 'error');
+    }
+  }
 
   async function handleDelete(b) {
     if (!confirm(`Opravdu smazat budovu „${b.name}"? Smažou se i všechny moduly a alerty.`)) return;
@@ -81,6 +129,43 @@ export default function AdminPanel() {
           <div className="stat-label">Online moduly</div>
         </div>
       </div>
+
+      <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: 14 }}>Žádosti o přístup k budově</h2>
+
+      {pendingApprovals.length === 0 ? (
+        <div className="empty-state" style={{ marginBottom: 28 }}>
+          <h3>Žádné čekající žádosti</h3>
+          <p>Aktuálně žádný uživatel nečeká na schválení přístupu k budově.</p>
+        </div>
+      ) : (
+        <div className="table-wrapper" style={{ marginBottom: 28 }}>
+          <table>
+            <thead>
+              <tr>
+                <th>Uživatel</th>
+                <th>Email</th>
+                <th>Požadovaná budova</th>
+                <th>Stav</th>
+                <th style={{ textAlign: 'right' }}>Akce</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pendingApprovals.map((u) => (
+                <tr key={u._id}>
+                  <td><strong>{u.firstName} {u.lastName}</strong></td>
+                  <td>{u.email}</td>
+                  <td>{getRequestedBuildingName(u)}</td>
+                  <td><span className="badge badge-warning">PENDING</span></td>
+                  <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                    <button className="btn btn-primary btn-sm" onClick={() => handleApprove(u)}>Schválit</button>{' '}
+                    <button className="btn btn-danger btn-sm" onClick={() => handleReject(u)}>Odmítnout</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: 14 }}>Seznam budov</h2>
 

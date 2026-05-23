@@ -27,6 +27,8 @@ function shape(user) {
     lastName: user.lastName,
     role: user.role,
     assignedBuildings: user.assignedBuildings || [],
+    requestedBuilding: user.requestedBuilding || null,
+    approvalStatus: user.approvalStatus || 'APPROVED',
     fullName: [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email
   };
 }

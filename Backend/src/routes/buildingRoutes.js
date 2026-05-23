@@ -1,5 +1,6 @@
 const express = require("express");
 const { Building, Module, Alert } = require("../models");
+const { filterByRole } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
@@ -36,7 +37,7 @@ router.post("/create", async (req, res) => {
   }
 });
 
-router.get("/getState", async (req, res) => {
+router.get("/getState", filterByRole, async (req, res) => {
   try {
     const { id } = req.query;
 
@@ -45,6 +46,21 @@ router.get("/getState", async (req, res) => {
         code: "invalidDtoIn",
         message: "Building id is required."
       });
+    }
+
+    const { role, assignedBuildings } = req.userFilter;
+
+    if (role === "USER") {
+      const canAccessBuilding = (assignedBuildings || []).some(
+        (buildingId) => String(buildingId) === String(id)
+      );
+
+      if (!canAccessBuilding) {
+        return res.status(403).json({
+          code: "buildingAccessNotApproved",
+          message: "User does not have approved access to this building."
+        });
+      }
     }
 
     const building = await Building.findById(id).lean();
@@ -284,6 +300,25 @@ router.delete("/delete", async (req, res) => {
     res.json({ message: "Building and all related data were deleted." });
   } catch (error) {
     res.status(500).json({ code: "internalError", message: error.message });
+  }
+});
+
+router.get("/public-list", async (req, res) => {
+  try {
+    const buildings = await Building.find()
+      .select("name address floors")
+      .sort({ name: 1 })
+      .lean();
+
+    res.json({
+      itemList: buildings,
+      total: buildings.length
+    });
+  } catch (error) {
+    res.status(500).json({
+      code: "internalError",
+      message: error.message
+    });
   }
 });
 

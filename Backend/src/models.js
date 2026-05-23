@@ -186,6 +186,36 @@ const userSchema = new mongoose.Schema(
       }
     ],
 
+    // Žádost o přístup k budově.
+    // Při registraci USER vybere budovu, ale přístup získá až po schválení adminem.
+    requestedBuilding: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Building",
+      default: null
+    },
+
+    approvalStatus: {
+      type: String,
+      enum: ["PENDING", "APPROVED", "REJECTED"],
+      default: "APPROVED"
+    },
+
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null
+    },
+
+    approvedAt: {
+      type: Date,
+      default: null
+    },
+
+    rejectedAt: {
+      type: Date,
+      default: null
+    },
+
     // Status
     isActive: {
       type: Boolean,

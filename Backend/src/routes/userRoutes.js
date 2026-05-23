@@ -49,25 +49,36 @@ router.post("/register", async (req, res) => {
       });
     }
 
-    // USER MUSÍ mít přiřazenou budovu, RESCUER si budovu nevybírá (vidí všechny).
+    // USER si při registraci vybere budovu,
+    // ale přístup získá až po schválení adminem.
     let assignedBuildings = [];
+    let requestedBuilding = null;
+    let approvalStatus = "APPROVED";
+
     if (requestedRole === "USER") {
       if (!building) {
         return res.status(400).json({
-          code: "buildingRequired",
-          message: "Building selection is required for USER role."
-        });
-      }
-      const b = await Building.findById(building).catch(() => null);
-      if (!b) {
-        return res.status(404).json({
-          code: "buildingDoesNotExist",
-          message: "Selected building does not exist."
-        });
-      }
-      assignedBuildings = [b._id];
+        code: "buildingRequired",
+        message: "Building selection is required for USER role."
+      });
     }
-    // RESCUER → assignedBuildings = [] (záchranář vidí všechny budovy přes filtrování v handleru)
+
+    const b = await Building.findById(building).catch(() => null);
+
+    if (!b) {
+      return res.status(404).json({
+        code: "buildingDoesNotExist",
+        message: "Selected building does not exist."
+      });
+    }
+
+    requestedBuilding = b._id;
+    assignedBuildings = [];
+    approvalStatus = "PENDING";
+    }
+
+    // RESCUER zatím zůstává bez assignedBuildings,
+    // protože podle vašeho filtrování vidí všechny budovy.
 
     // Duplicita emailu
     const existingUser = await User.findOne({ email: email.toLowerCase() });
@@ -87,7 +98,9 @@ router.post("/register", async (req, res) => {
       firstName,
       lastName,
       role: requestedRole,
-      assignedBuildings
+      assignedBuildings,
+      requestedBuilding,
+      approvalStatus
     });
 
     const userResponse = user.toObject();
@@ -224,6 +237,132 @@ router.get("/list", requireRole(["ADMIN"]), async (req, res) => {
       itemList: users,
       total: users.length
     });
+  } catch (error) {
+    res.status(500).json({
+      code: "internalError",
+      message: error.message
+    });
+  }
+});
+
+/**
+ * GET /user/pending-approvals
+ * Seznam uživatelů čekajících na schválení přístupu k budově.
+ */
+router.get("/pending-approvals", requireRole(["ADMIN"]), async (req, res) => {
+  try {
+    const users = await User.find({
+      role: "USER",
+      approvalStatus: "PENDING"
+    })
+      .select("-password")
+      .populate("requestedBuilding", "name address floors")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json({
+      itemList: users,
+      total: users.length
+    });
+  } catch (error) {
+    res.status(500).json({
+      code: "internalError",
+      message: error.message
+    });
+  }
+});
+
+/**
+ * POST /user/:userId/approve-building
+ * Schválit USERovi přístup k požadované budově.
+ */
+router.post("/:userId/approve-building", requireRole(["ADMIN"]), async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        code: "userNotFound",
+        message: "User not found."
+      });
+    }
+
+    if (user.role !== "USER") {
+      return res.status(400).json({
+        code: "invalidUserRole",
+        message: "Only USER building access can be approved."
+      });
+    }
+
+    if (!user.requestedBuilding) {
+      return res.status(400).json({
+        code: "requestedBuildingMissing",
+        message: "User does not have requested building."
+      });
+    }
+
+    user.approvalStatus = "APPROVED";
+    user.assignedBuildings = [user.requestedBuilding];
+    user.approvedBy = req.user.id;
+    user.approvedAt = new Date();
+    user.rejectedAt = null;
+
+    await user.save();
+
+    const userResponse = await User.findById(user._id)
+      .select("-password")
+      .populate("requestedBuilding", "name address floors")
+      .lean();
+
+    res.json(userResponse);
+  } catch (error) {
+    res.status(500).json({
+      code: "internalError",
+      message: error.message
+    });
+  }
+});
+
+/**
+ * POST /user/:userId/reject-building
+ * Zamítnout USERovi přístup k požadované budově.
+ */
+router.post("/:userId/reject-building", requireRole(["ADMIN"]), async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        code: "userNotFound",
+        message: "User not found."
+      });
+    }
+
+    if (user.role !== "USER") {
+      return res.status(400).json({
+        code: "invalidUserRole",
+        message: "Only USER building access can be rejected."
+      });
+    }
+
+    user.approvalStatus = "REJECTED";
+    user.assignedBuildings = [];
+    user.approvedBy = null;
+    user.approvedAt = null;
+    user.rejectedAt = new Date();
+
+    await user.save();
+
+    const userResponse = await User.findById(user._id)
+      .select("-password")
+      .populate("requestedBuilding", "name address floors")
+      .lean();
+
+    res.json(userResponse);
   } catch (error) {
     res.status(500).json({
       code: "internalError",

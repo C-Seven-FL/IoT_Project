@@ -9,6 +9,7 @@ import { useAuth } from '../AuthContext.jsx';
 export default function Dashboard() {
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [buildings, setBuildings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -75,10 +76,22 @@ export default function Dashboard() {
         <div className="stat-card"><div className="stat-value">{totalModules}</div><div className="stat-label">Modulů celkem</div></div>
       </div>
 
-      {buildings.length === 0 ? (
+      {user?.role === 'USER' && user?.approvalStatus === 'PENDING' ? (
+        <div className="empty-state">
+          <h3>Žádost čeká na schválení</h3>
+          <p>Vaše registrace byla úspěšná, ale přístup k vybrané budově musí ještě potvrdit administrátor.</p>
+          <p>Po schválení se vám zde automaticky zobrazí monitoring vaší budovy.</p>
+        </div>
+      ) : user?.role === 'USER' && user?.approvalStatus === 'REJECTED' ? (
+        <div className="empty-state">
+          <h3>Žádost byla zamítnuta</h3>
+          <p>Administrátor zamítl váš přístup k vybrané budově.</p>
+          <p>Pokud se jedná o chybu, kontaktujte správce systému.</p>
+        </div>
+      ) : buildings.length === 0 ? (
         <div className="empty-state">
           <h3>Žádné budovy v systému</h3>
-          <p>{isAdmin ? 'Klikněte na „+ Přidat dům" nebo přejděte do Admin panelu.' : 'Kontaktujte administrátora pro přidání budovy.'}</p>
+          <p>Kontaktujte administrátora pro přiřazení budovy.</p>
         </div>
       ) : (
         <div className="building-grid">
