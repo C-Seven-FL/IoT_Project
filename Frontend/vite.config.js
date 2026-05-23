@@ -7,7 +7,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'https://smart-guard-system.onrender.com/',
+        target: 'https://smart-guard-be.onrender.com/',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       }
