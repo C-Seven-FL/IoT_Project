@@ -65,12 +65,48 @@ router.get("/getState", async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    function getModuleDisplayStatus(module, moduleAlerts) {
-      if (moduleAlerts.length > 0) {
+    function hasTemperatureValue(value) {
+      return value !== null && value !== undefined;
+    }
+
+    function getAlertStatus(alerts = []) {
+      const hasDanger = alerts.some((alert) =>
+        alert.type === "SOS" ||
+        alert.type === "FIRE" ||
+        alert.type === "EARTHQUAKE" ||
+        alert.severity === "CRITICAL" ||
+        alert.severity === "DANGER"
+      );
+
+      if (hasDanger) {
         return "DANGER";
       }
 
-      if (module.lastTemperature !== null && module.lastTemperature >= 45) {
+      const hasWarning = alerts.some((alert) =>
+        alert.type === "TEMPERATURE_WARNING" ||
+        alert.severity === "HIGH" ||
+        alert.severity === "WARNING"
+      );
+
+      if (hasWarning) {
+        return "WARNING";
+      }
+
+      return "OK";
+    }
+
+    function getModuleDisplayStatus(module, moduleAlerts) {
+      const alertStatus = getAlertStatus(moduleAlerts);
+
+      if (alertStatus !== "OK") {
+        return alertStatus;
+      }
+
+      if (hasTemperatureValue(module.lastTemperature) && module.lastTemperature >= 60) {
+        return "DANGER";
+      }
+
+      if (hasTemperatureValue(module.lastTemperature) && module.lastTemperature >= 45) {
         return "WARNING";
       }
 
@@ -81,11 +117,53 @@ router.get("/getState", async (req, res) => {
       return "ONLINE";
     }
 
+    function getFloorStatus(floorAlerts, mappedModules) {
+      const alertStatus = getAlertStatus(floorAlerts);
+
+      if (alertStatus === "DANGER") {
+        return "DANGER";
+      }
+
+      if (mappedModules.some((module) => module.status === "DANGER")) {
+        return "DANGER";
+      }
+
+      if (
+        alertStatus === "WARNING" ||
+        mappedModules.some((module) => module.status === "WARNING")
+      ) {
+        return "WARNING";
+      }
+
+      return "OK";
+    }
+
+    function getBuildingStatus(activeAlerts, floors) {
+      const alertStatus = getAlertStatus(activeAlerts);
+
+      if (alertStatus === "DANGER") {
+        return "DANGER";
+      }
+
+      if (floors.some((floor) => floor.status === "DANGER")) {
+        return "DANGER";
+      }
+
+      if (
+        alertStatus === "WARNING" ||
+        floors.some((floor) => floor.status === "WARNING")
+      ) {
+        return "WARNING";
+      }
+
+      return "OK";
+    }
+
     const floors = [];
 
     for (let floor = 1; floor <= building.floors; floor++) {
-      const floorModules = modules.filter((module) => module.floor === floor);
-      const floorAlerts = activeAlerts.filter((alert) => alert.floor === floor);
+      const floorModules = modules.filter((module) => Number(module.floor) === floor);
+      const floorAlerts = activeAlerts.filter((alert) => Number(alert.floor) === floor);
 
       const mappedModules = floorModules.map((module) => {
         const moduleAlerts = floorAlerts.filter(
@@ -102,13 +180,7 @@ router.get("/getState", async (req, res) => {
         };
       });
 
-      let floorStatus = "OK";
-
-      if (floorAlerts.length > 0) {
-        floorStatus = "DANGER";
-      } else if (mappedModules.some((module) => module.status === "WARNING")) {
-        floorStatus = "WARNING";
-      }
+      const floorStatus = getFloorStatus(floorAlerts, mappedModules);
 
       floors.push({
         floor,
@@ -118,13 +190,7 @@ router.get("/getState", async (req, res) => {
       });
     }
 
-    let buildingStatus = "OK";
-
-    if (activeAlerts.length > 0) {
-      buildingStatus = "DANGER";
-    } else if (floors.some((floor) => floor.status === "WARNING")) {
-      buildingStatus = "WARNING";
-    }
+    const buildingStatus = getBuildingStatus(activeAlerts, floors);
 
     res.json({
       building: {
